@@ -69,7 +69,7 @@ class VITS2_based_SiFiTTS(nn.Module):
     self.segment_size = segment_size
     self.n_speakers = hps["common"]["n_speaker"]
     self.gin_channels = hps["common"]["gin_channels"]
-    self.transformer_flow_type = "pre_conv"
+    self.transformer_flow_type = "fft" # "fft" / "mono_layer" / "pre_conv" ### When mono_layer and pre_conv, kl div loss went negative.
     self.current_mas_noise_scale = float(hps["VITS2_config"]["mas_noise_scale"])
     self.enc_gin_channels = gin_channels
 
@@ -475,7 +475,7 @@ class VITS2_based_SiFiSinger(nn.Module):
     self.segment_size = segment_size
     self.n_speakers = hps["common"]["n_speaker"]
     self.gin_channels = hps["common"]["gin_channels"]
-    self.transformer_flow_type = "pre_conv"
+    self.transformer_flow_type = "fft" # "fft" / "mono_layer" / "pre_conv" ### When mono_layer and pre_conv, kl div loss went negative.
     self.current_mas_noise_scale = float(hps["VITS2_config"]["mas_noise_scale"])
     self.enc_gin_channels = gin_channels
   
@@ -505,7 +505,7 @@ class VITS2_based_SiFiSinger(nn.Module):
        1, 
        4, 
        gin_channels=gin_channels, 
-       use_transformer_flows=True,
+       use_transformer_flows=True, # Trueにすると、kl_divergense がマイナスになる。
        transformer_flow_type=self.transformer_flow_type
        )
     
@@ -649,7 +649,8 @@ class VITS2_based_SiFiSinger(nn.Module):
     w = torch.exp(logw) * H_ph_mask * length_scale
     w_ceil = torch.ceil(w)
 
-    w_ceil, _ = self.adjust_duration(ph_IDs, w_ceil, word_frame_dur, n_ph_pool)
+    w_ceil, diff = self.adjust_duration(ph_IDs, w_ceil, word_frame_dur, n_ph_pool)
+    w_ceil[0,0,-1] -= diff # eval時だとph分余分なframeが作られるので、末尾でつじつま合わせ。
 
     y_lengths = torch.clamp_min(torch.sum(w_ceil, [1, 2]), 1).long()
     y_mask = torch.unsqueeze(commons.sequence_mask(y_lengths, None), 1).to(H_ph_mask.dtype)
@@ -2105,7 +2106,7 @@ class DiffusionModels(nn.Module):
         #f0 = (700 * (torch.pow(10, lf0 *self.lf0_max * 500 / 2595) - 1))
         f0[f0<0] = 0
         f0 = f0 * self.f0_max
-        return f0 
+        return  
 
 class NoisePredictor(nn.Module):
     def __init__(self,hps,
@@ -2245,6 +2246,7 @@ class NoisePredictor(nn.Module):
 
         return f0 # , torch.zeros(size=(f0.size(0), 3, f0.size(2))).cuda()
 
+
 class U_Net_1D(torch.nn.Module):
     def __init__(self,in_ch=192,             # Hidden
                     inner_ch=256,          # 
@@ -2344,7 +2346,7 @@ class U_Net_1D(torch.nn.Module):
         x_0 = self.CrossAttn_D1(x=x, x_mask=x_mask, h=h, h_mask=h_mask)
         _, _, x_0_len = x_0.shape
         x = self.DownSample_D1(inputs=x_0) # length/2 
-
+        
         x = self.ResBlock_D2(inputs=x, t=t)
         x_mask_1 = self.mask_downsample(downsample_x=x, mask=x_mask)
         x_1 = self.CrossAttn_D2(x=x, x_mask=x_mask_1, h=h, h_mask=h_mask)
