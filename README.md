@@ -25,18 +25,18 @@
 
 Anacondaによる実行環境構築を想定する。
 
-0. Anacondaで"SVS"という名前の仮想環境を作成する。[y]or nを聞かれたら[y]を入力する。
+0. Anacondaで"SiFiVITS2"という名前の仮想環境を作成する。[y]or nを聞かれたら[y]を入力する。
     ```sh
-    conda create -n SVS python=3.8    
+    conda create -n SiFiVITS2 python=3.8    
     ```
 0. 仮想環境を有効化する。
     ```sh
-    conda activate SVS 
+    conda activate SiFiVITS2 
     ```
 0. このレポジトリをクローンする（もしくはDownload Zipでダウンロードする）
     ```sh
-    git clone https://github.com/tonnetonne814/SiFI-VITS2-44100-Ja.git 
-    cd SiFI-VITS2-44100-Ja # フォルダへ移動
+    git clone https://github.com/tonnetonne814/SiFi-VITS2-44100-Ja.git 
+    cd SiFi-VITS2-44100-Ja # フォルダへ移動
     ```
 0. [https://pytorch.org/](https://pytorch.org/)のURLよりPyTorchをインストールする。
     
