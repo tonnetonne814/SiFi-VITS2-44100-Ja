@@ -1,0 +1,309 @@
+### 学習 / 評価 設定 ###
+log_interval: 100
+eval_interval: 3000
+max_epochs: 100000
+batch_size : 64
+num_workers : 16
+is_finetune : False
+finetune_G : "./path/to/G_finetune.pth"
+finetune_D : "./path/to/D_finetune.pth"
+finetune_DUR : "./path/to/DUR_finetune.pth"
+train_data_path:     "./filelists/TTS_homebrew_train_44100.txt"
+eval_data_path:      "./filelists/TTS_homebrew_val_44100.txt"
+test_data_path:      "./filelists/TTS_homebrew_test_44100.txt"
+oto2lab_path :       "./oto2lab.table"
+ph_statistics_path : ""
+noteid2hz_txt_path : "./noteid2hz.txt"
+learning_rate: 2e-4    
+weight_decay: 0
+betas : [0.8, 0.99]
+eps : 1e-9
+scheduler: rsqrt # rsqrt|none
+optimizer_adam_beta1: 0.9
+optimizer_adam_beta2: 0.98
+clip_grad_norm: 1
+clip_grad_value: 0
+seed: 1234
+fp16_run : false
+fp16_run : False
+lr_decay : 0.999875
+mel_fmax : null
+mel_fmin : 0.0 
+DDP_use : False
+gain_mel : 45
+gain_kl_spec  : 1.0
+gain_dur_ph : 0.6
+gain_dur_word : 0.3
+gain_dur_length : 0.1
+gain_reg : 1.0
+gain_fm : 2.0
+kl_dur:
+  kl_weight: 1.
+  kl_weight_init: 0.000001
+  kl_weight_increase_epoch: 2 # 1000
+  kl_weight_end: 0.0001
+
+### データセット設定 ###
+sampling_rate: 44100
+hop_length: 512
+filter_length : 2048
+segments_size: 16384 
+n_mel_channels : 80
+win_length : 2048
+wav_max_ms : 30000 #[ms]
+wav_min_ms : 50 #[ms]
+f0_max : 1100 
+f0_min : 65
+slice_gain: 20
+
+VITS2_config:
+  mas_noise_scale : 0.01
+
+common:
+  num_samples: 1
+  latent_dim: 256
+  output_dim: 80
+  final_reduction_factor: 1
+  max_reduction_factor: 1
+  mel_text_len_ratio: 1
+  alpha: 15
+  gin_channels : 256
+  n_speaker : 1
+
+transformer:
+  encoder:
+    embd_dim: 256
+    n_conv: 3
+    attention_heads: 2
+    ffn_hidden: 1024
+    conv_kernel: [9,1]
+    drop_rate: 0.2
+    n_blk: 4
+
+  decoder:
+    nblk: 4
+    attention_dim: 256
+    attention_heads: 2
+    post_n_conv: 5
+    conv_filters: 1024
+    conv_kernel: [9, 1]
+    drop_rate: 0.2
+
+  posterior:
+    n_conv: 3
+    conv_kernel: 3
+    post_hidden: 256
+    pos_drop_rate: 0
+
+  prior:
+    n_blk: 4
+    n_transformer_blk: 2
+    attention_dim: 256
+    attention_heads: 4
+    temperature: 1.0
+    ffn_hidden: 1024
+    inverse: False
+
+length_predictor:
+  dense:
+    activation: "identity"
+
+pitch_predictor:
+  filter_size: 128
+  kernel: 3
+  dropout: 0.2
+
+variance_embedding:
+  pitch_quantization: "linear" # support 'linear' or 'log', 'log' is allowed only if the pitch values are not normalized during preprocessing
+  energy_quantization: "linear" # support 'linear' or 'log', 'log' is allowed only if the energy values are not normalized during preprocessing
+  n_bins: 256
+
+max_seq_len: 2000
+multi_speaker: False
+add_pitch: False
+add_length_predict: False
+
+vocoder:
+  model: "Griffin-Lim" 
+  speaker: "universal" 
+
+ph_encoder :
+  out_channels : 192
+  hidden_channels : 192
+  filter_channels: 192
+  n_layers: 4
+  n_heads : 2
+  kernel_size: 3
+  p_dropout : 0.1
+
+spec_encoder:
+  spec_channels : 1025
+  out_channels : 192
+  hidden_channels : 192
+  
+ph_note_encoder:
+  spec_channels : 384
+  out_channels : 192
+  hidden_channels : 384
+  
+flow:
+  inter_channels : 192
+  hidden_channels : 192 
+
+wordlevel_posattn:
+  emb_dim : 192
+  word_vocab : 512
+
+dur_predictor:
+  input_size: 256
+  filter_size : 256
+  kernel_size : 3
+  dropout : 0.5
+
+gaussian_upsampler:
+  delta : 0.1
+
+hifi_gan:
+  inter_channels: 256
+  hidden_channels: 256
+  filter_channels: 768
+  n_heads: 2
+  n_layers: 6
+  kernel_size: 3
+  p_dropout: 0.1
+  resblock: 1
+  resblock_kernel_sizes: [3,7,11]
+  resblock_dilation_sizes: [[1,3,5], [1,3,5], [1,3,5]]
+  upsample_rates: [8, 8, 2, 2, 2]
+  upsample_initial_channel: 512
+  upsample_kernel_sizes: [16,16, 4, 4, 4]
+  n_layers_q: 3
+  use_spectral_norm: false
+  ssl_dim: 256
+
+MPDiscriminator:
+  periods : [2,3,5,7,11]
+  use_spectral_norm : false
+  
+dur_discriminator:
+  hidden_channels : 256
+
+### Diffusion設定 ###
+Diffusion:
+  T: 1000 # training
+  beta_0: 0.0001
+  beta_T: 0.06
+  noise_schedule: 'cosine_beta'
+  N: 50 # inference
+  ddim : true
+
+
+####################
+### F0 Diffusion ###
+####################
+NoisePredictor:
+  out_channels : 1
+  inner_channels : 192
+  WN_in_channels : 1          # 固定?
+  WN_kernel_size : 5          # 固定?
+  WN_dilation_rate : 1        # 固定?
+  WN_n_layers : 16            # 固定?
+  WN_p_dropout : 0            # 固定?
+  Attn_filter_channels : 256
+  Attn_n_layers : 6
+  Attn_n_heads : 2
+  Attn_kernel_size : 3
+  Attn_p_dropout : 0.1
+  n_speakers : 1
+  Diff_step_embed_in : 128
+  Diff_step_embed_mid : 512
+  Diff_step_embed_out : 512
+note_encoder :
+  n_note : 127
+  hidden_channels : 192
+####################
+
+
+SiFiGAN_utils:
+  dense_factors : [0.5, 1, 4, 8, 16]      # Dense factor in PDCNNs.
+  sine_amp: 0.1                    # Sine amplitude.
+  noise_amp: 0.003                 # Noise amplitude.
+  signal_types: ["sine"]           # List of input signal types for generator.
+  sine_f0_type: "cf0"              # F0 type for sine signal ("f0" or "cf0").
+  df_f0_type: "cf0"                # F0 type for dilation factor ("f0" or "cf0").
+
+SiFiGANGenerator:
+  in_channels: 256                      # Number of input channels.
+  out_channels: 1                       # Number of output channels.
+  channels: 512                         # Number of initial channels.
+  gin_channels : 256
+  kernel_size: 7                        # Kernel size of initial and final conv layers.
+  upsample_scales: [8, 8, 2, 2, 2]         # Upsampling scales. 8x8x2x2x2=512 == HopLength
+  upsample_kernel_sizes: [16, 16, 4, 4, 4]  # Kernel size for upsampling layers.Default=2xscales
+  source_network_params:                # Parameters for source-network.
+      resblock_kernel_size: 3           # Kernel size for adaptive residual blocks.
+      resblock_dilations:               # Dilations for adaptive residual blocks.
+          - [1]
+          - [1, 2]
+          - [1, 2, 4]
+          - [1, 2, 4, 8]
+          - [1, 2, 4, 8, 16]
+      use_additional_convs: true        # Whether to use additional conv layers.
+  filter_network_params:                # Parameters for filter-network.
+      resblock_kernel_sizes: [3, 5, 7]  # Kernel size for residual blocks.
+      resblock_dilations:               # Dilations for residual blocks.
+          - [1, 3, 5]
+          - [1, 3, 5]
+          - [1, 3, 5]
+          - [1, 3, 5]
+      use_additional_convs: false       # Whether to use additional conv layers.
+  share_upsamples: false                # Whether to share up-sampling transposed CNNs.
+  share_downsamples: false              # Whether to share down-sampling CNNs.
+  bias: true                            # Whether to use bias parameter in conv.
+  nonlinear_activation: "LeakyReLU"     # Nonlinear activation type.
+  nonlinear_activation_params:          # Nonlinear activation paramters.
+      negative_slope: 0.1
+  use_weight_norm: true                 # Whether to apply weight normalization.
+
+UnivNet_MRMPDiscriminator:
+  # multi resolution
+  fft_sizes: [512, 1024, 2048, 4096]           # FFT sizes for each spectral discriminator.
+  hop_sizes: [128, 256, 512, 1024]              # Hop sizes for each spectral discriminator.
+  win_lengths: [512, 1024, 2048, 4096]          # Window lengths for each spectral discriminator.
+  window: "hann_window"                  # Name of window function.
+  spectral_discriminator_params:         # Params for UnivNet spectral discriminator.
+    channels: 32                         # Number of channels for conv layer.
+    kernel_sizes:                        # List of stride sizes in down-sampling CNNs.
+      - [3, 9]
+      - [3, 9]
+      - [3, 9]
+      - [3, 9]
+      - [3, 3]
+      - [3, 3]
+    strides:                             #  List of kernel sizes in down-sampling CNNs.
+      - [1, 1]
+      - [1, 2]
+      - [1, 2]
+      - [1, 2]
+      - [1, 1]
+      - [1, 1]
+    bias: true                           # Whether to add bias parameter in convolution layers.
+    nonlinear_activation: "LeakyReLU"    # Nonlinear activation.
+    nonlinear_activation_params:         # Nonlinear activation paramters.
+      negative_slope: 0.2
+
+  # multi period
+  periods: [2, 3, 5, 7, 11, 17, 23, 37]  # List of period for multi-period discriminator.
+  period_discriminator_params:           # Params for HiFiGAN period discriminator.
+    in_channels: 1                       # Number of input channels.
+    out_channels: 1                      # Number of output channels.
+    kernel_sizes: [5, 3]                 # List of kernel sizes.
+    channels: 32                         # Initial number of channels.
+    downsample_scales: [3, 3, 3, 3, 1]   # Downsampling scales.
+    max_downsample_channels: 1024        # Maximum number of channels in downsampling conv layers.
+    bias: true                           # Whether to use bias parameter in conv layer."
+    nonlinear_activation: "LeakyReLU"    # Nonlinear activation.
+    nonlinear_activation_params:         # Nonlinear activation paramters.
+      negative_slope: 0.1
+    use_weight_norm: true                # Whether to apply weight normalization.
+    use_spectral_norm: false             # Whether to apply spectral normalization.
