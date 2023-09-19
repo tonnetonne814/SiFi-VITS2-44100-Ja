@@ -3,7 +3,6 @@
 
 このリポジトリは、主に[unofficial VITS2](https://github.com/p0p4k/vits2_pytorch)、[SiFi-GAN](https://github.com/chomeyama/SiFiGAN)、及び[RMS Singer](https://arxiv.org/abs/2305.10686)を参考にして作られた、実験用のTTS/SVSモデルです。Pitch生成モデルとTTS/SVS合成モデルは別々に学習を行います。推論の際には、SVSではustファイルから歌声を、TTSでは入力テキストから音声を合成します。また、ピッチの再生成によりピッチや声色の異なる音声生成をすることが可能です。最後に、TTSモデルで歌声を実験的に合成します。
 
-<img src="./resources/vits.png" width="100%">
 <img src="./resources/diff.png" width="100%">
 
 ## ⚠Work in Progress⚠
