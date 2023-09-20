@@ -8,7 +8,7 @@
 
 ### SVS Sample Audio(Synth144k, DDPM180k)
 
-<audio src="./resources/SVS_sample.wav" controls preload></audio>
+<audio src="./resources/SVS_sample.wav">
 
 ## ⚠Work in Progress⚠
 
