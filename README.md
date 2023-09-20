@@ -6,10 +6,6 @@
 <img src="./resources/vits.png" width="100%">
 <img src="./resources/diff.png" width="100%">
 
-### SVS Sample Audio(Synth144k, DDPM180k)
-
-<audio src="./resources/SVS_sample.wav">
-
 ## ⚠Work in Progress⚠
 
 - [x] SVS dataset, preprocess for both
