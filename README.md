@@ -7,6 +7,7 @@
 <img src="./resources/diff.png" width="100%">
 
 ### SVS Sample Audio(Synth144k, DDPM180k)
+
 <audio src="./resources/SVS_sample.wav" controls preload></audio>
 
 ## ⚠Work in Progress⚠
