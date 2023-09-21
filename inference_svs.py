@@ -130,7 +130,7 @@ def inference(args):
                                                     word_dur_ms=word_dur_ms.cuda(),
                                                     ph_word_flag=ph_idx_in_a_word.cuda(),
                                                     n_ph_pool=n_ph_seq.cuda(),
-                                                    noise_scale=1.0)
+                                                    noise_scale=0.66)
 
                 # f0 diffusion [1,1,T']
                 f0_pd = F0DIFF.sampling(condition=[ph_seq.cuda(), ph_length.cuda(), w_ceil.cuda(), 
@@ -167,7 +167,9 @@ def inference(args):
                                  samplerate=hps["sampling_rate"],
                                  channels=1)
                     x = input("OK:0, Retake:1  select==>")
-                    if int(x) == 1:
+                    if x == "":
+                        retake_flag = False
+                    elif int(x) == 1:
                         pass
                     else:
                         retake_flag = False
@@ -289,7 +291,7 @@ def preprocess_dataset(UST_data, g2p, ph2id, hps):
     n_ph_seq = []
     noteid_seq = []
     ms_seq =[]
-    for ms, ph_ids, n_ph, noteid in word_seq:
+    for idx, (ms, ph_ids, n_ph, noteid) in enumerate(word_seq):
         ms_seq      += [ms]
         ph_seq      += [ph_ids]
         n_ph_seq    += [n_ph ]
@@ -308,8 +310,11 @@ def preprocess_dataset(UST_data, g2p, ph2id, hps):
         if ph_ids[0] == ph2id[g2p["R"]] and total_time!=0:
             
             if ms > 3000:
-                batch_process.append([ms_seq[:-1], ph_seq[:-1], n_ph_seq[:-1], noteid_seq[:-1]])
-                batch_process.append([ms_seq[-1], ph_seq[-1], n_ph_seq[-1], noteid_seq[-1]])
+                if len(ms_seq) > 1:
+                    batch_process.append([ms_seq[:-1], ph_seq[:-1], n_ph_seq[:-1], noteid_seq[:-1]])
+                    batch_process.append([ms_seq[-1], ph_seq[-1], n_ph_seq[-1], noteid_seq[-1]]) 
+                elif len(ms_seq) == 1:
+                    batch_process.append([ms_seq, ph_seq, n_ph_seq, noteid_seq])
             else:
                 batch_process.append([ms_seq, ph_seq, n_ph_seq, noteid_seq])
 
@@ -433,11 +438,11 @@ if __name__ == "__main__":
     parser.add_argument('--UST_path',
                         type=str,
                         #required=True,
-                        default="./inference_models/ﾄﾞﾚﾐﾌｧｿﾗｼﾄﾞ.ust",
+                        default="./inference_models/BurningHeart.ust",
                         help='Path to checkpoint')
     parser.add_argument('--ask_retake',
                         type=str,
-                        default=False,
+                        default=True,
                         help='Whether to save output or not')
     parser.add_argument('--is_save',
                         type=str,
