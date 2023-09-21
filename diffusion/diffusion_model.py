@@ -179,7 +179,7 @@ class F0_Diffusion(nn.Module):
             if n > 0:
                 x = x + self.sigma_infer[n] * self.generate_x(self.size)
             else:
-                print()
+                #print()
                 pass
         return x
     
