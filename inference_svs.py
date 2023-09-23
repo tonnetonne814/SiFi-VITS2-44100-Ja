@@ -309,12 +309,19 @@ def preprocess_dataset(UST_data, g2p, ph2id, hps):
         # 途中で来たR時
         if ph_ids[0] == ph2id[g2p["R"]] and total_time!=0:
             
+            # 長い時は分割
             if ms > 3000:
                 if len(ms_seq) > 1:
-                    batch_process.append([ms_seq[:-1], ph_seq[:-1], n_ph_seq[:-1], noteid_seq[:-1]])
-                    batch_process.append([ms_seq[-1], ph_seq[-1], n_ph_seq[-1], noteid_seq[-1]]) 
+                    ms_last = float(ms_seq[-1]) - 1000
+
+                    batch_process.append([ms_seq[:-1] + [1000], 
+                                          ph_seq, 
+                                          n_ph_seq, 
+                                          noteid_seq])
+                    batch_process.append([ms_last, ph_seq[-1], n_ph_seq[-1], noteid_seq[-1]]) 
                 elif len(ms_seq) == 1:
                     batch_process.append([ms_seq, ph_seq, n_ph_seq, noteid_seq])
+            # それ以外はそのまま
             else:
                 batch_process.append([ms_seq, ph_seq, n_ph_seq, noteid_seq])
 
@@ -442,7 +449,7 @@ if __name__ == "__main__":
                         help='Path to checkpoint')
     parser.add_argument('--ask_retake',
                         type=str,
-                        default=True,
+                        default=False,
                         help='Whether to save output or not')
     parser.add_argument('--is_save',
                         type=str,

@@ -136,7 +136,7 @@ class VITS2_based_SiFiTTS(nn.Module):
       g = self.emb_g(speakerID).unsqueeze(-1) # [B, hidden, 1]
     else:
       g = None
-      
+
     # posterior encoder
     z_spec, z_spec_m_q, z_spec_logs_q, spec_mask    = self.enc_q(spec, spec_lengths.float(), g=g)           # z_spec=[B, hidden, spec_len]
 
@@ -148,7 +148,7 @@ class VITS2_based_SiFiTTS(nn.Module):
                                                               w_dur_ms=None,
                                                               ph_w_idx=None,
                                                               g=g)       # H_ph=[B, hidden, ph_len]
-    
+
     with torch.no_grad():
       # negative cross-entropy
       s_p_sq_r = torch.exp(-2 * H_ph_logs_p) # [b, d, t]
@@ -194,13 +194,13 @@ class VITS2_based_SiFiTTS(nn.Module):
                                           ids_str=copy.deepcopy(ids_slice),
                                           upscales=self.upsample_scales,
                                           segment_size=self.segment_size)  # frame level
-    
+
     # SiFi Decoder
     voice, excitation = self.dec(x=sinewave_slice.cuda(), 
                                  c=z_slice, 
                                  d=tuple([d.to("cuda:0") for d in dfs_slice]), 
                                  g=g)
-    
+
     return voice, excitation, l2_dur_loss, attn_gt, ids_slice, dp_H_ph_mask, spec_mask, \
           (z_spec, z_spec_text, H_ph_m_p, H_ph_logs_p, z_spec_m_q, z_spec_logs_q), \
           (dp_H_ph, logw, logw_)
@@ -263,7 +263,7 @@ class VITS2_based_SiFiTTS(nn.Module):
       g = self.emb_g(speakerID).unsqueeze(-1) # [B, hidden, 1]
     else:
       g = None
-      
+
     # posterior encoder
     z_spec, _, _, spec_mask    = self.enc_q(spec, spec_lengths.float(), g=g)           # z_spec=[B, hidden, spec_len]
 
@@ -275,7 +275,7 @@ class VITS2_based_SiFiTTS(nn.Module):
                                                               w_dur_ms=None,
                                                               ph_w_idx=None,
                                                               g=g)       # H_ph=[B, hidden, ph_len]
-    
+
     with torch.no_grad():
       # negative cross-entropy
       s_p_sq_r = torch.exp(-2 * H_ph_logs_p) # [b, d, t]
@@ -294,7 +294,7 @@ class VITS2_based_SiFiTTS(nn.Module):
     ph_dur = attn.sum(2)
 
     return ph_dur, attn
-    
+
   def voice_conversion(self, y, y_lengths, sid_src, sid_tgt):
     assert self.n_speakers > 0, "n_speakers have to be larger than 0."
     g_src = self.emb_g(sid_src).unsqueeze(-1)
@@ -305,7 +305,7 @@ class VITS2_based_SiFiTTS(nn.Module):
     o_hat = self.dec(z_hat * y_mask, g=g_tgt)
     return o_hat, y_mask, (z, z_p, z_hat)
 
-  # inference only and batch size=1 only 
+   # inference only and batch size=1 only 
   def adjust_duration(self, ph_ids, ph_dur_pd, word_dur, n_ph_in_word, noise_scale=0.33):
     ph_ids      = ph_ids[0, :]
     ph_dur_pd   = ph_dur_pd[0][0]
@@ -334,9 +334,8 @@ class VITS2_based_SiFiTTS(nn.Module):
         z_n_ph = n_ph - 1 
     # last consonants
     if z_n_ph != 0: 
-        out_ph_dur[0:z_n_ph] = ph_dur_pd[0:z_n_ph] # Vowels this time + previous consonants
-        diff = torch.sum(out_ph_dur) - sum_duration
-        total_diff += diff
+      out_ph_dur[0:z_n_ph] = ph_dur_pd[0:z_n_ph] # Vowels this time + previous consonants
+    #assert torch.sum(out_ph_dur) == sum_duration  # check duration
 
     # adjust ph duration by statistics
     if self.ph_statistics is not False:
@@ -356,17 +355,22 @@ class VITS2_based_SiFiTTS(nn.Module):
         else:  
           out_ph_dur[idx] += diff
           diff=0
+
       # shifting diff last (Perhaps not necessary)
-      if diff != 0:
-         out_ph_dur[0] += diff
+      #if diff != 0:
+      #   out_ph_dur[0] += diff
 
       if z_n_ph != 0: 
           out_ph_dur[0:z_n_ph] = ph_dur_pd[0:z_n_ph] # Vowels this time + previous consonants
+          
+          #out_ph_dur[-1] -= diff # 長さ補正はconcatでやる
+      #assert torch.sum(out_ph_dur) == sum_duration  # check duration
     
-    if z_n_ph == 0:
+    # 最後に子音があれば、それだけずらす。
+    if int(z_n_ph) == 0:
       total_diff = 0
     else:
-      total_diff = int(torch.sum(out_ph_dur[0:z_n_ph]))
+      total_diff = int(torch.sum(out_ph_dur[0:int(z_n_ph)]))
 
     return out_ph_dur.view(1,1,-1), total_diff
     
@@ -712,10 +716,7 @@ class VITS2_based_SiFiSinger(nn.Module):
         z_n_ph = n_ph - 1 
     # last consonants
     if z_n_ph != 0: 
-        out_ph_dur[0:z_n_ph] = ph_dur_pd[0:z_n_ph] # Vowels this time + previous consonants
-        diff = torch.sum(out_ph_dur) - sum_duration
-        #out_ph_dur[-1] -= diff # 長さ補正はconcatでやる
-        total_diff += diff
+      out_ph_dur[0:z_n_ph] = ph_dur_pd[0:z_n_ph] # Vowels this time + previous consonants
     #assert torch.sum(out_ph_dur) == sum_duration  # check duration
 
     # adjust ph duration by statistics
@@ -736,9 +737,10 @@ class VITS2_based_SiFiSinger(nn.Module):
         else:  
           out_ph_dur[idx] += diff
           diff=0
+
       # shifting diff last (Perhaps not necessary)
-      if diff != 0:
-         out_ph_dur[0] += diff
+      #if diff != 0:
+      #   out_ph_dur[0] += diff
 
       if z_n_ph != 0: 
           out_ph_dur[0:z_n_ph] = ph_dur_pd[0:z_n_ph] # Vowels this time + previous consonants
@@ -746,10 +748,11 @@ class VITS2_based_SiFiSinger(nn.Module):
           #out_ph_dur[-1] -= diff # 長さ補正はconcatでやる
       #assert torch.sum(out_ph_dur) == sum_duration  # check duration
     
-    if z_n_ph == 0:
+    # 最後に子音があれば、それだけずらす。
+    if int(z_n_ph) == 0:
       total_diff = 0
     else:
-      total_diff = int(torch.sum(out_ph_dur[0:z_n_ph]))
+      total_diff = int(torch.sum(out_ph_dur[0:int(z_n_ph)]))
 
     return out_ph_dur.view(1,1,-1), total_diff
     
@@ -1908,7 +1911,7 @@ class DiffusionModels(nn.Module):
         else:
           self.infer_timesteps = hps["Diffusion"]["N"]
           self.ddim = hps["Diffusion"]["ddim"]
-        
+
         self.f0_max = float(hps["f0_max"])
         self.lf0_max = 2595. * torch.log10(1. + torch.tensor(hps["f0_max"]).float() / 700.) / 500
 
@@ -2106,7 +2109,7 @@ class DiffusionModels(nn.Module):
         #f0 = (700 * (torch.pow(10, lf0 *self.lf0_max * 500 / 2595) - 1))
         f0[f0<0] = 0
         f0 = f0 * self.f0_max
-        return  
+        return f0  
 
 class NoisePredictor(nn.Module):
     def __init__(self,hps,
