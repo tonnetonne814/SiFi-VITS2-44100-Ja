@@ -14,7 +14,7 @@
 - [x] SVS dataset, preprocess for both
 - [x] SVS dataset, training Synthesizer
 - [x] SVS dataset, training PitchDDPM
-- [ ] SVS dataset, pretrain Synthesizer/PitchDDPM
+- [x] SVS dataset, pretrain Synthesizer/PitchDDPM
 - [x] inference(SVS Synthesizer and SVS PitchDDPM)
 - [x] TTS dataset, preprocess for Synthesizer
 - [x] TTS dataset, preprocess for PitchDDPM
@@ -193,8 +193,8 @@ python3 inference_svs.py --config ./path/to/config.json --F0diff_model_path ./pa
 ファインチューニングを行う場合は、config.yaml内のis_finetuneをtrueに変更し、config.yaml内のfinetune_G/D/DURに各モデルパスを記述し、「4. 学習」のコマンドで学習を開始することで、ファインチューニングを行うことが出来ます。
 
 ## 事前学習モデル
-- [ ] SVS Synthesizer (波音リツ歌声データベースVer2)  
-- [ ] SVS PitchDDPM (波音リツ歌声データベースVer2)  
+- [x] SVS Synthesizer (波音リツ歌声データベースVer2)  [450k steps](https://drive.google.com/file/d/1WpJ4ij8J3Zg4HN21sMK-jHojaPKNxoxe/view?usp=sharing)
+- [x] SVS PitchDDPM (波音リツ歌声データベースVer2)  [288k steps](https://drive.google.com/file/d/1XKZb47lrOKqSW3XM14UwEcCye4JA1wEd/view?usp=sharing)
 - [ ] TTS Synthesizer (JSUT Basic5000)
 - [ ] TTS PitchDDPM (JSUT Basic5000)
 
@@ -205,6 +205,7 @@ python3 inference_svs.py --config ./path/to/config.json --F0diff_model_path ./pa
 - [Improved Denoising Diffusion Probabilistic Models](https://openreview.net/forum?id=-NEXDKk8gZ)
 - [multinomial_diffusion](https://github.com/ehoogeboom/multinomial_diffusion)
 - [FastDiff : PyTorch Implementation of FastDiff (IJCAI'22)](https://github.com/Rongjiehuang/FastDiff)
+- [Diffusers: State-of-the-art diffusion models for image and audio generation in PyTorch](https://github.com/huggingface/diffusers)
 - [VISinger : Use VITS and Opencpop to develop singing voice synthesis; Different from VISinger.](https://github.com/jerryuhoo/VISinger)
 - [FastSpeech 2 : Fast and High-Quality End-to-End Text to Speech](https://github.com/ming024/FastSpeech2)
 - [ESPNet : End-to-End Speech Processing Toolkit](https://github.com/espnet/espnet)
