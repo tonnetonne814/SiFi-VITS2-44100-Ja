@@ -80,22 +80,17 @@ def inference(args):
 
     # play audio by system default
     speaker = sc.get_speaker(sc.default_speaker().name)
-    
+
     out_voices = list()
     diff_lists = list()
     total_lengths = list()
-
-    #import glob
-    #for path in glob.glob("./infer_logs/*.wav"):
-    #    y, sr = sf.read(path)
-    #    out_voices.append(y)
 
     # required_grad is False
     with torch.inference_mode():
         for idx, (ph_seq, ph_length, word_frame_dur, word_lengths, word_dur_ms, ph_idx_in_a_word, n_ph_seq,\
              noteid_seq, noteid_length) in enumerate(inference_loader):
             speakerID = torch.zeros(size=(1,), dtype=torch.int64) # speaker id is fixed
-            
+
             # for retake flag
             retake_flag = True
             while retake_flag:
@@ -130,7 +125,7 @@ def inference(args):
                                                     word_dur_ms=word_dur_ms.cuda(),
                                                     ph_word_flag=ph_idx_in_a_word.cuda(),
                                                     n_ph_pool=n_ph_seq.cuda(),
-                                                    noise_scale=0.66)
+                                                    noise_scale=0.5)
 
                 # f0 diffusion [1,1,T']
                 f0_pd = F0DIFF.sampling(condition=[ph_seq.cuda(), ph_length.cuda(), w_ceil.cuda(), 
@@ -202,7 +197,8 @@ def inference(args):
                             y_label = "f0",
                             savename = os.path.join(save_dir, str(idx).zfill(3)+".png"))
 
-    concat_voices(out_voices, save_dir, hps, diff_lists, total_lengths)
+    if len(out_voices) != 1:
+        concat_voices(out_voices, save_dir, hps, diff_lists, total_lengths)
     return 0
 
 def concat_voices(out_voices,save_dir, hps, diff_lists, total_lengths):
@@ -260,7 +256,7 @@ def preprocess_dataset(UST_data, g2p, ph2id, hps):
         if ms == 0:
             continue
         noteid = float(id_to_hz[ust["note_MIDI"]])
-        lyric = ust["lyric"]
+        lyric = ust["lyric"].split(" ")[-1]
         if "っ" in lyric and len(lyric)>1:
             txt = ""   
             word_ph = ""   
@@ -274,6 +270,12 @@ def preprocess_dataset(UST_data, g2p, ph2id, hps):
             # last pull
             if txt != "":
                 word_ph += g2p[txt]
+        elif lyric == "ー":
+            ph = z_ust["lyric"]
+            if len(ph) == 1:
+                word_ph = g2p[ph]
+            else:
+                word_ph = g2p[ph[-1]]
         else:      
             word_ph = g2p[lyric]
         word_ph = word_ph.split(" ")
@@ -284,7 +286,7 @@ def preprocess_dataset(UST_data, g2p, ph2id, hps):
             id = ph2id[ph]
             id_seq += [id]
         word_seq .append( [ms, id_seq, n_ph, noteid])
-
+        z_ust = ust
     batch_process = list()
     total_time = 0
     ph_seq = []
@@ -445,17 +447,17 @@ if __name__ == "__main__":
     parser.add_argument('--UST_path',
                         type=str,
                         #required=True,
-                        default="./inference_models/BurningHeart.ust",
+                        default="./inference_models/ﾄﾞﾚﾐﾌｧｿﾗｼﾄﾞ.ust",
                         help='Path to checkpoint')
     parser.add_argument('--ask_retake',
-                        type=str,
-                        default=False,
+                        type=bool,
+                        default=True,
                         help='Whether to save output or not')
     parser.add_argument('--is_save',
                         type=str,
                         default=True,
                         help='Whether to save output or not')
     args = parser.parse_args()
-    
+
     print(f"[INFO] AI Retake function is {args.ask_retake}")
     inference(args)
